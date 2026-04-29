@@ -1,84 +1,84 @@
-# AGENTS.md - Especificacion Maestra Unificada (RMS Multi-Tenant)
+# AGENTS.md - Especificacion Maestra Unificada (RMS)
 
 ## 0. Identidad del Sistema
-- **Nombre sugerido:** FlowTable RMS / CoreRest SaaS.
-- **Definicion:** Plataforma integral de gestion de restaurantes (RMS) para automatizar reservas, pre-ordering, pedidos, cocina, inventario y cobros.
-- **Paradigma:** SaaS multi-tenant con aislamiento estricto por `schema` o `tenant_id`.
+- **Nombre:** RMS - Restaurant Management System
+- **Definicion:** Una plataforma dual que funciona como un **catalogo publico de restaurantes** para comensales y como un **sistema integral de gestion (SaaS)** para cada restaurante. Automatiza el ciclo completo: descubrimiento, reserva, pedido, cocina, pago y fidelizacion.
+- **Paradigma:** SaaS multi-tenant con un portal publico unificado. Aislamiento estricto por `tenant_id` para la gestion interna de cada restaurante.
 - **Stack base:** NestJS (backend), React + Tailwind (frontend), PostgreSQL, Redis.
-- **Enfoque UX:** PWA mobile-first para comensal y staff operativo.
+- **Enfoque UX:** PWA mobile-first para comensales y staff operativo.
+- **Internacionalizacion (i18n):** Soporte nativo para Ingles, Espanol y Frances.
 
 ## 1. Objetivos de Producto
-- Unificar operacion de sala, cocina, caja e inventario en una sola plataforma.
-- Reducir tiempos de servicio con POS de mozo y KDS en tiempo real.
-- Habilitar reservas inteligentes con geofencing y pre-pedido.
+- **Para el Comensal:** Ofrecer un catalogo centralizado para descubrir restaurantes, explorar menus, reservar y pagar de forma agil.
+- **Para el Restaurante:** Unificar la operacion de sala, cocina, caja e inventario en una sola plataforma para reducir tiempos, errores y costos.
+- Habilitar reservas inteligentes con seleccion de mesa y pre-pedidos.
+- Fomentar la interaccion social y el marketing a traves de valoraciones y compartidos en redes.
 - Mantener continuidad operativa ante cortes breves de internet (modo offline-ready).
 - Escalar desde un local pequeno hasta cadenas con multiples sucursales.
 
 ## 2. Arquitectura de Modulos Core (Big Picture)
 
-### 2.1 POS System (Hub Central)
-- Gestion de pedidos para mesa, delivery y take-away.
-- Interfaz tactil optimizada para carga rapida de items y modificaciones.
-- Cobro multicanal: QR, efectivo, transferencia y pasarelas.
-- Facturacion electronica con integraciones fiscales (ej. AFIP/Factura A con CUIT).
+### 2.1 Catalogo Publico y Descubrimiento
+- Buscador de restaurantes y platos por proximidad, valoracion y tipo de cocina.
+- Perfiles de restaurantes con menus visuales (fotos, videos), valoraciones y criticas.
+- Funcionalidad para compartir platos y perfiles en redes sociales (Instagram, Facebook, WhatsApp, TikTok).
 
-### 2.2 Kitchen Display System (KDS)
-- Comandas digitales en pantallas tactiles (sin tickets de papel).
-- Priorizacion por hora de llegada estimada y tipo de preparacion.
-- Temporizadores de prioridad por pedido.
+### 2.2 Motor de Reservas y Mapa de Mesas
+- Editor visual de plano de mesas (drag and drop) para el administrador del restaurante.
+- Logica de reserva que permite al comensal elegir una mesa especifica.
+- Reserva dinamica por cantidad de plazas (adultos, ninos, bebes).
+- Modulo de pre-ordering opcional vinculado a la reserva.
+
+### 2.3 POS System y Operaciones de Sala
+- **Comensal:** Escaneo de QR en mesa para ver el menu, ordenar y pagar.
+- **Mozo (mobile-first):** Toma de pedidos, adicion de detalles a comandas y gestion de mesas desde tablet/smartphone.
+- Cierre de mesa con generacion de factura y opcion de anadir propina.
+
+### 2.4 Kitchen Display System (KDS)
+- Comandas digitales en pantallas tactiles con priorizacion inteligente.
+- Estados visuales (en preparacion, listo, entregado).
 - Avisos de "plato listo" con notificaciones push y voz sintetizada.
 
-### 2.3 Reservas, Mapa de Mesas y Geoposicion
-- Editor visual de plano de mesas (drag and drop).
-- Reserva dinamica por cantidad de plazas (adultos, ninos, bebes).
-- Geolocalizacion por distancia/tiempo para deteccion de llegada.
-- Evento "cliente en camino" para anticipar operacion de sala/cocina.
+### 2.5 CRM, Valoraciones y Fidelizacion
+- Sistema de valoracion por plato, servicio y restaurante.
+- Distincion entre "comensal titular" (reserva) y "comensales invitados".
+- Perfiles de clientes registrados con historial, preferencias y puntos.
 
-### 2.4 Inventario y Cost Control
-- Descuento automatico de insumos por receta/escandallo.
-- Gestion de proveedores, recepcion y ordenes de compra por umbrales minimos.
-- Control de mermas y analitica de desperdicio.
+### 2.6 Back-Office y Gestion (Tenant)
+- **Admin Local:** Gestion de perfil publico, menu, precios, promociones y turnos.
+- **Inventario y Cost Control:** Descuento automatico de insumos por receta.
+- **Workforce Management:** Gestion de roles (administrador, mozo, cocinero) y horarios.
 
-### 2.5 Workforce Management
-- Programacion inteligente de turnos segun forecasting de ventas.
-- Control de presentismo con QR personal.
-- Reglas transparentes para distribucion de propinas (pooling).
-
-### 2.6 CRM y Fidelizacion
-- Perfiles de clientes con historial, alergias y preferencias.
-- Programas de puntos y automatizaciones de marketing.
-
-### 2.7 Back-Office y SuperAdmin SaaS
-- Dashboard global para ventas de suscripciones y analitica multi-tenant.
-- Gestion de marcas, sucursales/franquicias y soporte.
-- Logistica central y remitos digitales entre sucursales.
+### 2.7 SuperAdmin SaaS
+- Dashboard global para gestion de suscripciones, analitica multi-tenant y onboarding de nuevos restaurantes.
 
 ## 3. Experiencia por Rol (User Stories)
 
 ### 3.1 Comensal (PWA publica)
-- Reserva mesa con plazas y preferencia horaria.
-- Realiza pre-order desde la reserva.
-- Solicita adicionales y paga cuenta/propina via QR desde mesa.
+- **Como** comensal, **quiero** buscar platos especificos cerca de mi para descubrir nuevos restaurantes.
+- **Como** comensal, **quiero** reservar una mesa especifica para 4 adultos y 1 bebe, y pre-ordenar las bebidas.
+- **Como** comensal, **quiero** escanear un QR en la mesa para pedir postre sin llamar al mozo.
+- **Como** comensal titular, **quiero** valorar el plato que pedi y el servicio del mozo.
+- **Como** comensal invitado, **quiero** registrarme para poder valorar mi propio plato.
+- **Como** comensal, **quiero** compartir el link del plato que me encanto en mi Instagram.
 
 ### 3.2 Mozo (mobile-first)
-- Toma pedidos desde celular/tablet sin terminal fija.
-- Gestiona mesa, adicionales y cobro.
-- Recibe alertas push/voz cuando cocina libera platos.
+- **Como** mozo, **quiero** tomar un pedido desde mi celular y anadir una nota "sin picante" a un plato.
+- **Como** mozo, **quiero** recibir una alerta en mi dispositivo cuando el plato de la mesa 5 este listo.
+- **Como** mozo, **quiero** cerrar la mesa 7, generar la factura y registrar la propina.
 
-### 3.3 Cocinero (KDS)
-- Visualiza comandas pendientes por prioridad y tiempo.
-- Marca estados (en preparacion, listo, entregado).
-- Dispara notificaciones de plato listo a sala.
+### 3.3 Cocinero / Jefe de Cocina (KDS)
+- **Como** cocinero, **quiero** ver las comandas ordenadas por prioridad y tiempo de espera.
+- **Como** jefe de cocina, **quiero** supervisar todas las comandas y marcar un plato como "listo" para notificar al mozo.
 
 ### 3.4 Admin Local (Tenant Admin)
-- Configura mapa de mesas y sectores.
-- Administra menu, precios, promociones y turnos.
-- Controla inventario, finanzas y metricas de rendimiento.
+- **Como** admin, **quiero** arrastrar y soltar mesas en un plano para replicar la distribucion de mi salon.
+- **Como** admin, **quiero** actualizar el menu del dia con fotos nuevas y poner el "plato del dia" en promocion.
+- **Como** admin, **quiero** ver las valoraciones de los clientes para entender que platos son los mas populares.
 
 ### 3.5 SuperAdmin (Owner del SaaS)
-- Controla suscripciones por plan (inicial/intermedio/superior).
-- Supervisa salud operativa y KPIs globales.
-- Administra onboarding de nuevos restaurantes.
+- **Como** SuperAdmin, **quiero** ver cuantos restaurantes se han suscrito este mes y cual es el plan mas popular.
+- **Como** SuperAdmin, **quiero** gestionar el onboarding de una nueva cadena de franquicias.
 
 ## 4. Fases de Desarrollo Detalladas
 
@@ -89,16 +89,17 @@
 - **Tarea 1.4:** Auth JWT para registro de propietarios y login multiplataforma.
 - **Resultado esperado:** Cimientos del SaaS y acceso seguro inicial.
 
-### Fase 2 - Motor de Reservas y Mapa (Semana 2)
-- **Tarea 2.1:** Editor de plano de mesas drag and drop.
-- **Tarea 2.2:** Logica de reserva por plazas + georadio (km/tiempo de llegada).
-- **Tarea 2.3:** Notificaciones push para estado "cliente en camino".
-- **Resultado esperado:** Flujo reserva -> llegada operativo.
+### Fase 2 - Catalogo Publico y Reservas (Semana 2)
+- **Tarea 2.1:** Buscador de restaurantes y platos por proximidad.
+- **Tarea 2.2:** Editor de plano de mesas drag and drop.
+- **Tarea 2.3:** Logica de reserva por plazas + georadio (km/tiempo de llegada).
+- **Tarea 2.4:** Modulo de pre-ordering vinculado a la reserva.
+- **Resultado esperado:** Flujo catalogo -> reserva -> llegada operativo.
 
 ### Fase 3 - Operaciones de Restaurante (Semana 3)
 - **Tarea 3.1:** POS de mozo con adicion rapida, lectura QR y envio a cocina.
 - **Tarea 3.2:** Monitor de cocina KDS con cola de pedidos y temporizadores.
-- **Tarea 3.3:** Modulo pre-ordering vinculado a la reserva.
+- **Tarea 3.3:** Sistema de valoracion por plato y servicio.
 - **Resultado esperado:** Ciclo operativo sala-cocina completamente digital.
 
 ### Fase 4 - Back-Office y Finanzas (Semana 4)
@@ -117,6 +118,7 @@
 | SuperAdmin | Ventas SaaS, soporte, analitica | PC |
 
 ## 6. Especificaciones de Diseno y Operacion
+- **Internacionalizacion (i18n):** Deteccion automatica de idioma del navegador con opcion de cambio manual (ES, EN, FR).
 - **Mobile-first:** Operable con una mano para mozos.
 - **Offline-ready:** Sincronizacion local via Redis para tolerar cortes breves de internet.
 - **Accesibilidad:** Alertas auditivas para eventos criticos (nueva comanda/plato listo).
@@ -130,10 +132,10 @@
 - **Infraestructura:** Docker, Adminer, Nginx reverse proxy.
 
 ## 8. Reglas de Negocio Criticas
-- **Seguridad:** Un tenant nunca puede leer/escribir datos de otro tenant.
+- **Aislamiento de Datos:** Un tenant NUNCA debe poder leer/escribir datos de otro tenant.
+- **Consistencia Publica:** Los datos publicos del catalogo deben ser consistentes con la gestion interna de cada tenant.
+- **Trazabilidad Social:** Cada valoracion y compartido debe poder auditarse por usuario y tenant.
 - **Resiliencia:** El staff debe poder seguir operando en red local ante caidas de internet.
-- **Escalabilidad:** Arquitectura apta para crecimiento de 1 local a multiples cadenas.
-- **Trazabilidad:** Cada evento operativo clave debe poder auditarse por tenant/sucursal/usuario.
 
 ## 9. Skills y OpenSpec en `/skills`
 ### Skills core (propuestas originales)
@@ -147,6 +149,7 @@
 - `tenant-resolver-nestjs.md`
 - `table-map-editor-dnd.md`
 - `qr-ordering-payment-flow.md`
+- `i18n-react-implementation.md`
 
 ## 10. Mapa de Trazabilidad (Modulo -> Fase -> Skill)
 - **Tenant resolver y seguridad de datos:** Fase 1 -> `multi-tenant-isolation.md`, `tenant-resolver-nestjs.md`
@@ -160,4 +163,3 @@
 - Priorizar primero seguridad multi-tenant y estabilidad operativa.
 - En cada entrega, incluir: alcance, riesgos, pruebas minimas y trazabilidad con este AGENTS.
 - Ante conflictos entre detalle funcional y velocidad, preservar reglas criticas de negocio.
-
