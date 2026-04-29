@@ -1,0 +1,143 @@
+services:
+  # ==========================================
+  # BASE DE DATOS — MySQL 8.0
+  # ==========================================
+  db:
+    image: mysql:8.0
+    container_name: rms_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - rms_mysql_data:/var/lib/mysql
+    networks:
+      - internal_network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # CACHE — Redis 7
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: rms_redis
+    restart: always
+    networks:
+      - internal_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # BACKEND — NestJS API
+  # ==========================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: rms_api
+    restart: always
+    env_file:
+      - .env.prod
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      FRONTEND_URL: ${FRONTEND_URL}
+      ADDITIONAL_CORS_ORIGINS: ${ADDITIONAL_CORS_ORIGINS}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
+      MP_PUBLIC_KEY: ${MP_PUBLIC_KEY}
+      MP_CLIENT_ID: ${MP_CLIENT_ID}
+      MP_REDIRECT_URI: ${MP_REDIRECT_URI}
+      MP_OAUTH_BASE_URL: ${MP_OAUTH_BASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal_network
+      - dokploy-network
+    # API NO se expone directamente a través de Traefik
+    # El frontend (nginx) en el contenedor client es quien expone todo
+    labels:
+      - "traefik.enable=false"
+
+  # ==========================================
+  # FRONTEND — React + Vite
+  # ==========================================
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL}
+    container_name: rms_client
+    restart: always
+    depends_on:
+      - api
+    networks:
+      - dokploy-network
+      - internal_network
+    labels:
+      # Habilitar Traefik para este servicio
+      - "traefik.enable=true"
+      
+      # Router HTTP: Redireccionar HTTP a HTTPS
+      - "traefik.http.routers.rms-http.entrypoints=web"
+      - "traefik.http.routers.rms-http.rule=Host(`rms.dariassoft.com.ar`)"
+      - "traefik.http.routers.rms-http.middlewares=redirect-to-https"
+      
+      # Middleware: Redireccionar de HTTP a HTTPS
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      
+      # Router HTTPS: Servir todo desde el frontend en puerto 80
+      - "traefik.http.routers.rms-https.entrypoints=websecure"
+      - "traefik.http.routers.rms-https.rule=Host(`rms.dariassoft.com.ar`)"
+      - "traefik.http.routers.rms-https.tls=true"
+      - "traefik.http.routers.rms-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.rms-https.service=rms-svc"
+      
+      # Service: Apunta al puerto 80 del contenedor (nginx)
+      - "traefik.http.services.rms-svc.loadbalancer.server.port=80"
+      - "traefik.http.services.rms-svc.loadbalancer.server.scheme=http"
+
+  # ==========================================
+  # DB MANAGER — Adminer
+  # ==========================================
+  adminer:
+    image: adminer:latest
+    container_name: rms_adminer
+    restart: always
+    networks:
+      - internal_network
+      - dokploy-network
+
+networks:
+  internal_network:
+    driver: bridge
+  dokploy-network:
+    external: true
+
+volumes:
+  rms_mysql_data:
+    driver: local
