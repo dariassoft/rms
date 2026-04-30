@@ -12,7 +12,7 @@ COPY . .
 
 EXPOSE 5173
 
-CMD ["sh", "-c", "npm install --prefer-offline && npm run dev -- --host 0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # ==========================================
 # STAGE 1: Build
@@ -21,6 +21,12 @@ FROM node:20-alpine AS builder
 
 # NODE_ENV=development asegura que npm ci instale devDependencies (vite, tailwind, etc.)
 ENV NODE_ENV=development
+
+ARG VITE_API_URL
+ARG VITE_WS_URL
+
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_WS_URL=$VITE_WS_URL
 
 WORKDIR /usr/src/app
 

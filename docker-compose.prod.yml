@@ -67,6 +67,10 @@ services:
       MP_CLIENT_ID: ${MP_CLIENT_ID}
       MP_REDIRECT_URI: ${MP_REDIRECT_URI}
       MP_OAUTH_BASE_URL: ${MP_OAUTH_BASE_URL}
+      DOMAIN: ${DOMAIN}
+      DB_RUN_SEED: ${DB_RUN_SEED}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE}
+      AFIP_ENCRYPTION_SECRET: ${AFIP_ENCRYPTION_SECRET}
     depends_on:
       db:
         condition: service_healthy
@@ -75,10 +79,25 @@ services:
     networks:
       - internal_network
       - dokploy-network
-    # API NO se expone directamente a través de Traefik
-    # El frontend (nginx) en el contenedor client es quien expone todo
+    # API se expone a través de Traefik en el subdominio api.
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      # Router HTTP: Redireccionar HTTP a HTTPS
+      - "traefik.http.routers.rms-api-http.entrypoints=web"
+      - "traefik.http.routers.rms-api-http.rule=Host(`api.rms.dariassoft.com.ar`)"
+      - "traefik.http.routers.rms-api-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.rms-api-http.priority=100"
+      
+      # Router HTTPS
+      - "traefik.http.routers.rms-api-https.entrypoints=websecure"
+      - "traefik.http.routers.rms-api-https.rule=Host(`api.rms.dariassoft.com.ar`)"
+      - "traefik.http.routers.rms-api-https.tls=true"
+      - "traefik.http.routers.rms-api-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.rms-api-https.service=rms-api-svc"
+      - "traefik.http.routers.rms-api-https.priority=100"
+      
+      # Service
+      - "traefik.http.services.rms-api-svc.loadbalancer.server.port=3000"
 
   # ==========================================
   # FRONTEND — React + Vite
@@ -104,7 +123,7 @@ services:
       
       # Router HTTP: Redireccionar HTTP a HTTPS
       - "traefik.http.routers.rms-http.entrypoints=web"
-      - "traefik.http.routers.rms-http.rule=Host(`rms.dariassoft.com.ar`)"
+      - "traefik.http.routers.rms-http.rule=Host(`rms.dariassoft.com.ar`) || HostRegexp(`{subdomain:[a-z0-9-]+}.rms.dariassoft.com.ar`)"
       - "traefik.http.routers.rms-http.middlewares=redirect-to-https"
       
       # Middleware: Redireccionar de HTTP a HTTPS
@@ -112,7 +131,7 @@ services:
       
       # Router HTTPS: Servir todo desde el frontend en puerto 80
       - "traefik.http.routers.rms-https.entrypoints=websecure"
-      - "traefik.http.routers.rms-https.rule=Host(`rms.dariassoft.com.ar`)"
+      - "traefik.http.routers.rms-https.rule=Host(`rms.dariassoft.com.ar`) || HostRegexp(`{subdomain:[a-z0-9-]+}.rms.dariassoft.com.ar`)"
       - "traefik.http.routers.rms-https.tls=true"
       - "traefik.http.routers.rms-https.tls.certresolver=letsencrypt"
       - "traefik.http.routers.rms-https.service=rms-svc"

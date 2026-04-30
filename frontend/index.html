@@ -5,6 +5,31 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RMS - Restaurant Management System</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FoodEstablishment",
+        "name": "RMS Multi-Tenant",
+        "description": "The unified platform for restaurant management and discovery.",
+        "url": "https://rms.dariassoft.com.ar",
+        "potentialAction": {
+          "@type": "ReserveAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://rms.dariassoft.com.ar/reserve",
+            "actionPlatform": [
+              "http://schema.org/DesktopWebPlatform",
+              "http://schema.org/IOSPlatform",
+              "http://schema.org/AndroidPlatform"
+            ]
+          },
+          "result": {
+            "@type": "FoodEstablishmentReservation",
+            "name": "Table Reservation"
+          }
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

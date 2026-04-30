@@ -49,19 +49,22 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development
     container_name: rms_api
-    command: tail -f /dev/null
+    command: sh -c "npm install && npm run start:dev"
     restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
       - .env
     environment:
+      - NODE_ENV=development
       - DB_HOST=db
       - REDIS_HOST=redis
     volumes:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules
+    user: root
     depends_on:
       db:
         condition: service_healthy
@@ -79,6 +82,7 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: rms_client
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     restart: unless-stopped
     ports:
       - "5173:5173"
@@ -87,6 +91,7 @@ services:
     volumes:
       - ./frontend:/usr/src/app
       - /usr/src/app/node_modules
+    user: root
     depends_on:
       - api
     networks:

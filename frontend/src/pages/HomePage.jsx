@@ -55,9 +55,11 @@ const HomePage = () => {
             {t('hero_desc')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-orange-500/25">
-              {t('hero_cta_search')}
-            </button>
+            <Link to="/search">
+              <button className="px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-orange-500/25">
+                {t('hero_cta_search')}
+              </button>
+            </Link>
             <Link to="/login">
               <button className="px-8 py-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-lg transition-all">
                 {t('hero_cta_login')}
