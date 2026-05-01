@@ -41,14 +41,20 @@ export const getBaseWsUrl = () => {
   return wsUrl;
 };
 
-const API_URL = getBaseApiUrl();
-
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: '', // Dejar vacío, lo resolveremos en el interceptor
 });
 
-// Interceptor para añadir el token y el tenant_id
+// Interceptor para resolver la URL dinámicamente y añadir el token
 api.interceptors.request.use((config) => {
+  // Calcular la URL base dinámicamente en cada request
+  const baseUrl = getBaseApiUrl();
+
+  // Si el URL de la config no es absoluto, prepender la baseUrl
+  if (!config.url.startsWith('http')) {
+    config.url = baseUrl + config.url;
+  }
+
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -71,6 +77,7 @@ api.interceptors.request.use((config) => {
     config.headers['x-tenant-id'] = tenantId;
   }
 
+  console.log('Request to:', config.url, 'with baseUrl:', baseUrl);
   return config;
 });
 
