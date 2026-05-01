@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
-import { CorsMiddleware } from './common/middleware/cors.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { User } from './modules/users/user.entity';
 import { RestaurantsModule } from './modules/tenants/restaurants.module';
@@ -65,14 +64,6 @@ import { SeedModule } from './modules/seed/seed.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    const nodeEnv = process.env.NODE_ENV;
-
-    // Aplicar CORS middleware SOLO en producción
-    if (nodeEnv === 'production') {
-      consumer
-        .apply(CorsMiddleware)
-        .forRoutes('*');
-    }
 
     consumer
       .apply(TenantMiddleware)
