@@ -13,6 +13,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const tenant_middleware_1 = require("./common/middleware/tenant.middleware");
+const cors_middleware_1 = require("./common/middleware/cors.middleware");
 const auth_module_1 = require("./modules/auth/auth.module");
 const user_entity_1 = require("./modules/users/user.entity");
 const restaurants_module_1 = require("./modules/tenants/restaurants.module");
@@ -39,6 +40,8 @@ const seed_module_1 = require("./modules/seed/seed.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer
+            .apply(cors_middleware_1.CorsMiddleware)
+            .forRoutes('*')
             .apply(tenant_middleware_1.TenantMiddleware)
             .forRoutes('*');
     }

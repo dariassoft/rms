@@ -15,16 +15,20 @@ async function bootstrap() {
                 return;
             }
             if (origin.includes('dariassoft.com.ar')) {
+                console.log(`CORS allowed for origin: ${origin}`);
                 callback(null, true);
                 return;
             }
             console.warn(`CORS blocked for origin: ${origin}`);
             callback(new Error(`Not allowed by CORS: ${origin}`));
         },
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
         credentials: true,
-        allowedHeaders: 'Content-Type,Authorization,x-tenant-id',
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'Accept', 'Origin'],
+        exposedHeaders: ['x-total-count', 'x-page-count'],
         optionsSuccessStatus: 200,
+        preflightContinue: false,
+        maxAge: 3600,
     });
     const port = process.env.APP_PORT || process.env.PORT || 3000;
     await app.listen(port);
