@@ -65,9 +65,16 @@ import { SeedModule } from './modules/seed/seed.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    const nodeEnv = process.env.NODE_ENV;
+
+    // Aplicar CORS middleware SOLO en producción
+    if (nodeEnv === 'production') {
+      consumer
+        .apply(CorsMiddleware)
+        .forRoutes('*');
+    }
+
     consumer
-      .apply(CorsMiddleware)
-      .forRoutes('*')
       .apply(TenantMiddleware)
       .forRoutes('*');
   }
