@@ -8,35 +8,16 @@ export const getBaseApiUrl = () => {
     return import.meta.env.VITE_API_URL || 'http://localhost:3000';
   }
 
-  // En producción, preferimos la resolución dinámica para soportar subdominios
-  // o usamos VITE_API_URL si está definido y NO es localhost
+  // En producción, si hay VITE_API_URL explícito, usarlo
   const envApiUrl = import.meta.env.VITE_API_URL;
   if (envApiUrl && !envApiUrl.includes('localhost')) {
     return envApiUrl;
   }
   
-  // Resolución dinámica
-  const parts = hostname.split('.');
-  let baseDomain;
-  
-  if (parts.length >= 4) {
-    // Caso: [tenant].rms.dariassoft.com.ar (5 partes) -> rms.dariassoft.com.ar
-    // Caso: rms.dariassoft.com.ar (4 partes) -> rms.dariassoft.com.ar
-    baseDomain = parts.slice(-4).join('.');
-  } else if (parts.length === 3) {
-    // Caso: rms.com.ar -> rms.com.ar
-    baseDomain = hostname;
-  } else {
-    // Fallback
-    baseDomain = parts.length > 2 ? parts.slice(-3).join('.') : hostname;
-  }
-  
-  const apiUrl = hostname.includes('localhost') || hostname.includes('127.0.0.1')
-    ? `${protocol}//api.${baseDomain}`
-    : `https://api.${baseDomain}`;
-  
-  console.log('Resolved API URL:', apiUrl);
-  return apiUrl;
+  // En producción sin VITE_API_URL: usar ruta relativa /api
+  // Traefik redireccionará internamente al backend
+  console.log('Using relative API URL: /api');
+  return '/api';
 };
 
 export const getBaseWsUrl = () => {
@@ -52,20 +33,11 @@ export const getBaseWsUrl = () => {
     return envWsUrl;
   }
   
-  const parts = hostname.split('.');
-  let baseDomain;
-  
-  if (parts.length >= 4) {
-    baseDomain = parts.slice(-4).join('.');
-  } else if (parts.length === 3) {
-    baseDomain = hostname;
-  } else {
-    baseDomain = parts.length > 2 ? parts.slice(-3).join('.') : hostname;
-  }
-  
-  const wsUrl = hostname.includes('localhost') || hostname.includes('127.0.0.1')
-    ? `${wsProtocol}//api.${baseDomain}`
-    : `wss://api.${baseDomain}`;
+  // En producción sin VITE_WS_URL: usar ruta relativa /api/socket.io/
+  // Traefik redireccionará internamente al backend
+  const currentUrl = new URL(window.location);
+  const wsUrl = `${wsProtocol}//${currentUrl.host}/api/socket.io/`;
+  console.log('Using relative WS URL:', wsUrl);
   return wsUrl;
 };
 
