@@ -7,36 +7,32 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
+      // Sin origin (requests desde el mismo dominio): permitir
       if (!origin) {
         callback(null, true);
         return;
       }
 
-      const domain = process.env.DOMAIN || 'rms.dariassoft.com.ar';
-      
-      // Limpiar el origen (quitar "/" al final si existe)
-      const cleanOrigin = origin.replace(/\/$/, '');
-      
-      const isAllowed = 
-        cleanOrigin === process.env.FRONTEND_URL ||
-        cleanOrigin.includes('localhost') ||
-        cleanOrigin.includes('127.0.0.1') ||
-        cleanOrigin === `http://${domain}` ||
-        cleanOrigin === `https://${domain}` ||
-        cleanOrigin === `http://api.${domain}` ||
-        cleanOrigin === `https://api.${domain}` ||
-        cleanOrigin.endsWith(`.${domain}`);
-
-      if (isAllowed) {
+      // Siempre permitir localhost y 127.0.0.1
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
         callback(null, true);
-      } else {
-        console.warn(`CORS blocked for origin: ${origin}`);
-        callback(new Error(`Not allowed by CORS: ${origin}`));
+        return;
       }
+
+      // En producción: permitir cualquier origen que sea *.dariassoft.com.ar
+      if (origin.includes('dariassoft.com.ar')) {
+        callback(null, true);
+        return;
+      }
+
+      // Rechazar todo lo demás
+      console.warn(`CORS blocked for origin: ${origin}`);
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: 'Content-Type,Authorization,x-tenant-id',
+    optionsSuccessStatus: 200,
   });
 
   const port = process.env.APP_PORT || process.env.PORT || 3000;
