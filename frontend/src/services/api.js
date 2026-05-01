@@ -14,10 +14,28 @@ export const getBaseApiUrl = () => {
     return envApiUrl;
   }
   
-  // En producción sin VITE_API_URL: usar ruta relativa /api
-  // Traefik redireccionará internamente al backend
-  console.log('Using relative API URL: /api');
-  return '/api';
+  // En producción: construir URL al subdominio api.*.com.ar
+  // rms.dariassoft.com.ar -> https://api.rms.dariassoft.com.ar
+  const parts = hostname.split('.');
+  let apiHostname;
+
+  if (parts.length >= 4) {
+    // Caso: rms.dariassoft.com.ar (4 partes) o restaurante.rms.dariassoft.com.ar (5 partes)
+    // Queremos: api.rms.dariassoft.com.ar
+    if (parts.length === 4) {
+      apiHostname = 'api.' + hostname;
+    } else {
+      // Si es restaurante.rms.dariassoft.com.ar, ignoramos el restaurante
+      apiHostname = 'api.' + parts.slice(-4).join('.');
+    }
+  } else {
+    // Fallback: localhost o dominios simples
+    apiHostname = 'api.' + hostname;
+  }
+
+  const apiUrl = protocol + '//' + apiHostname;
+  console.log('Using absolute API URL:', apiUrl);
+  return apiUrl;
 };
 
 export const getBaseWsUrl = () => {
@@ -33,11 +51,22 @@ export const getBaseWsUrl = () => {
     return envWsUrl;
   }
   
-  // En producción sin VITE_WS_URL: usar ruta relativa /api/socket.io/
-  // Traefik redireccionará internamente al backend
-  const currentUrl = new URL(window.location);
-  const wsUrl = `${wsProtocol}//${currentUrl.host}/api/socket.io/`;
-  console.log('Using relative WS URL:', wsUrl);
+  // En producción: construir WS URL al subdominio api.*.com.ar
+  const parts = hostname.split('.');
+  let apiHostname;
+
+  if (parts.length >= 4) {
+    if (parts.length === 4) {
+      apiHostname = 'api.' + hostname;
+    } else {
+      apiHostname = 'api.' + parts.slice(-4).join('.');
+    }
+  } else {
+    apiHostname = 'api.' + hostname;
+  }
+
+  const wsUrl = `${wsProtocol}//${apiHostname}`;
+  console.log('Using absolute WS URL:', wsUrl);
   return wsUrl;
 };
 
