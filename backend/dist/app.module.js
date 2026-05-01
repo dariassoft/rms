@@ -39,9 +39,13 @@ const super_admin_module_1 = require("./modules/super-admin/super-admin.module")
 const seed_module_1 = require("./modules/seed/seed.module");
 let AppModule = class AppModule {
     configure(consumer) {
+        const nodeEnv = process.env.NODE_ENV;
+        if (nodeEnv === 'production') {
+            consumer
+                .apply(cors_middleware_1.CorsMiddleware)
+                .forRoutes('*');
+        }
         consumer
-            .apply(cors_middleware_1.CorsMiddleware)
-            .forRoutes('*')
             .apply(tenant_middleware_1.TenantMiddleware)
             .forRoutes('*');
     }
