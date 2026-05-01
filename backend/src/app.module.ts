@@ -40,9 +40,9 @@ import { SeedModule } from './modules/seed/seed.module';
         type: 'mysql',
         host: configService.get<string>('DB_HOST') || 'localhost',
         port: configService.get<number>('DB_PORT') || 3306,
-        username: configService.get<string>('DB_USERNAME') || 'dev_user',
+        username: configService.get<string>('DB_USER') || configService.get<string>('DB_USERNAME') || 'dev_user',
         password: configService.get<string>('DB_PASSWORD') || 'dev_password',
-        database: configService.get<string>('DB_DATABASE') || 'rms_db',
+        database: configService.get<string>('DB_NAME') || configService.get<string>('DB_DATABASE') || 'rms_db',
         entities: [User, Restaurant, Dish, TableEntity, RoomElement, Reservation, PreOrderItem, Order, OrderItem, Rating, Ingredient, Supplier, Recipe, Invoice],
         synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true' || (configService.get<string>('NODE_ENV') !== 'production'),
         logging: configService.get<string>('DB_LOGGING') === 'true',
@@ -64,10 +64,8 @@ import { SeedModule } from './modules/seed/seed.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-
     consumer
       .apply(TenantMiddleware)
       .forRoutes('*');
   }
 }
-
